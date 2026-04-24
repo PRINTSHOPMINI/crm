@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>고객 상담 관리</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:#f5f7fa;color:#1a1a2e;font-size:14px}
+.header{background:#fff;border-bottom:1px solid #e8eaf0;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.logo{font-size:18px;font-weight:700;color:#185FA5}.logo span{color:#1a1a2e}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:#fff;border-radius:12px;padding:16px 20px;border:1px solid #e8eaf0}
+.stat-label{font-size:12px;color:#888;margin-bottom:6px}
+.stat-val{font-size:26px;font-weight:700;color:#185FA5}
+.card{background:#fff;border-radius:12px;border:1px solid #e8eaf0;padding:20px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:16px}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:12px;color:#666;font-weight:500}
+.fg input,.fg select,.fg textarea{border:1px solid #dde1ea;border-radius:8px;padding:9px 12px;font-size:14px;background:#fff;color:#1a1a2e;font-family:inherit;width:100%;transition:border-color 0.2s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:#185FA5;box-shadow:0 0 0 3px rgba(24,95,165,0.08)}
+.fg textarea{resize:vertical;min-height:80px}
+.wide{grid-column:1/-1}
+.btn-row{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+button{border-radius:8px;padding:9px 20px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all 0.15s;border:1px solid #dde1ea;background:#fff;color:#1a1a2e}
+button:hover{background:#f0f4fb}
+button:active{transform:scale(0.98)}
+.btn-primary{background:#185FA5;color:#fff;border-color:#185FA5}
+.btn-primary:hover{background:#0C447C;border-color:#0C447C}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-del{color:#A32D2D;border-color:#f0c8c8;background:#fff}
+.btn-del:hover{background:#FCEBEB}
+.search-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.search-row input,.search-row select{border:1px solid #dde1ea;border-radius:8px;padding:8px 12px;font-size:13px;background:#fff;color:#1a1a2e;font-family:inherit}
+.search-row input:focus,.search-row select:focus{outline:none;border-color:#185FA5}
+.search-row input{flex:1;min-width:150px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:10px 12px;text-align:left;border-bottom:1.5px solid #e8eaf0;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid #f0f2f7;color:#1a1a2e;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f7f9ff}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.b-사용방법{background:#E6F1FB;color:#0C447C}
+.b-고장{background:#FCEBEB;color:#791F1F}
+.b-분실{background:#FAEEDA;color:#633806}
+.b-영수증신청{background:#EAF3DE;color:#27500A}
+.b-주차등록{background:#E1F5EE;color:#085041}
+.b-운영관리{background:#FBEAF0;color:#72243E}
+.b-기타{background:#F1EFE8;color:#444441}
+.empty{text-align:center;padding:3rem;color:#aaa;font-size:14px}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;transition:opacity 0.3s,transform 0.3s;pointer-events:none;z-index:999;transform:translateY(8px)}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{background:#185FA5;color:#fff}
+.toast.err{background:#A32D2D;color:#fff}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:14px;padding:24px;width:90%;max-width:420px}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:10px}
+.modal p{font-size:14px;color:#666;margin-bottom:20px;line-height:1.6}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:6px}
+.spinner-blue{border-color:rgba(24,95,165,0.2);border-top-color:#185FA5}
+@keyframes spin{to{transform:rotate(360deg)}}
+.connected-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#27500A;background:#EAF3DE;padding:4px 12px;border-radius:20px;font-weight:500}
+.dot{width:7px;height:7px;background:#3B6D11;border-radius:50%;display:inline-block}
+.result-info{font-size:12px;color:#aaa;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">고객<span>상담</span>관리</div>
+  <span class="connected-badge"><span class="dot"></span>구글 시트 연결됨</span>
+</div>
+<div class="wrap">
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">전체 상담</div><div class="stat-val" id="s-total">-</div></div>
+    <div class="stat-card"><div class="stat-label">오늘 상담</div><div class="stat-val" id="s-today">-</div></div>
+    <div class="stat-card"><div class="stat-label">이번달</div><div class="stat-val" id="s-month">-</div></div>
+    <div class="stat-card"><div class="stat-label">고장 접수</div><div class="stat-val" id="s-breakdown">-</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">신규 상담 등록</div>
+    <div class="form-grid">
+      <div class="fg"><label>고객번호 (전화번호)</label><input type="tel" id="f-phone" placeholder="010-0000-0000" maxlength="13"></div>
+      <div class="fg"><label>상담일자</label><input type="date" id="f-date"></div>
+      <div class="fg"><label>상담시간</label><input type="time" id="f-time"></div>
+      <div class="fg"><label>상담구분</label>
+        <select id="f-type">
+          <option value="">선택</option>
+          <option>사용방법</option><option>고장</option><option>분실</option>
+          <option>영수증신청</option><option>주차등록</option><option>운영관리</option><option>기타</option>
+        </select>
+      </div>
+      <div class="fg wide"><label>상담내용</label><textarea id="f-content" placeholder="상담 내용을 입력하세요"></textarea></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" id="save-btn" onclick="saveRecord()">저장</button>
+      <button onclick="clearForm()">초기화</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">상담 기록 조회</div>
+    <div class="search-row">
+      <input type="text" id="q-search" placeholder="전화번호 또는 내용 검색..." oninput="renderTable()">
+      <select id="q-type" onchange="renderTable()">
+        <option value="">전체 구분</option>
+        <option>사용방법</option><option>고장</option><option>분실</option>
+        <option>영수증신청</option><option>주차등록</option><option>운영관리</option><option>기타</option>
+      </select>
+      <input type="date" id="q-from" onchange="renderTable()">
+      <span style="font-size:12px;color:#aaa">~</span>
+      <input type="date" id="q-to" onchange="renderTable()">
+      <button onclick="resetFilter()">초기화</button>
+      <button onclick="loadRecords()" style="margin-left:auto">↻ 새로고침</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th style="width:14%">전화번호</th>
+          <th style="width:11%">날짜</th>
+          <th style="width:8%">시간</th>
+          <th style="width:12%">구분</th>
+          <th>상담내용</th>
+          <th style="width:7%">삭제</th>
+        </tr></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+      <div id="empty-msg" class="empty" style="display:none">등록된 상담 기록이 없습니다.</div>
+    </div>
+    <div class="result-info" id="result-count"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="del-modal">
+  <div class="modal">
+    <h3>상담 기록 삭제</h3>
+    <p>이 상담 기록을 구글 시트에서 삭제하시겠습니까?<br>삭제 후 복구할 수 없습니다.</p>
+    <div class="btn-row">
+      <button class="btn-del" onclick="confirmDelete()">삭제</button>
+      <button onclick="closeModal()">취소</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const API_KEY = 'AIzaSyDgsjAaIW03V-ATXSLfVhje7Inm3P8oi0k';
+const SHEET_ID = '1C6bIK4TsdTWC8F2Fv1u6LHlx1D_Fx4-JB-nHuendRzA';
+const SHEET_NAME = '상담기록';
+const BASE = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}`;
+
+let allRecords = [];
+let deleteTarget = null;
+
+function toast(msg, type='ok'){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast ' + type + ' show';
+  setTimeout(() => t.className = 'toast', 2500);
+}
+function today(){ return new Date().toISOString().slice(0,10); }
+function nowTime(){ return new Date().toTimeString().slice(0,5); }
+function fmtPhone(v){
+  const d = v.replace(/\D/g,'');
+  if(d.length===11) return d.replace(/(\d{3})(\d{4})(\d{4})/,'$1-$2-$3');
+  if(d.length===10) return d.replace(/(\d{3})(\d{3})(\d{4})/,'$1-$2-$3');
+  return v;
+}
+function setDefaults(){
+  document.getElementById('f-date').value = today();
+  document.getElementById('f-time').value = nowTime();
+}
+function clearForm(){
+  ['f-phone','f-content'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-type').value = '';
+  setDefaults();
+}
+
+async function loadRecords(){
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:#aaa"><span class="spinner spinner-blue"></span>불러오는 중...</td></tr>`;
+  try {
+    const res = await fetch(`${BASE}/values/${encodeURIComponent(SHEET_NAME)}?key=${API_KEY}`);
+    const json = await res.json();
+    if(json.error){ toast('불러오기 실패: ' + json.error.message, 'err'); allRecords=[]; renderTable(); return; }
+    const rows = (json.values || []).slice(1);
+    allRecords = rows.map(r => ({
+      id: r[0]||'', phone: r[1]||'', date: r[2]||'', time: r[3]||'', type: r[4]||'', content: r[5]||''
+    })).reverse();
+    renderTable();
+    updateStats();
+  } catch(e){
+    toast('네트워크 오류가 발생했습니다', 'err');
+    allRecords=[]; renderTable();
+  }
+}
+
+async function saveRecord(){
+  const phone = document.getElementById('f-phone').value.trim();
+  const date = document.getElementById('f-date').value;
+  const time = document.getElementById('f-time').value;
+  const type = document.getElementById('f-type').value;
+  const content = document.getElementById('f-content').value.trim();
+  if(!phone){ toast('전화번호를 입력해주세요','err'); return; }
+  if(!date){ toast('상담일자를 선택해주세요','err'); return; }
+  if(!type){ toast('상담구분을 선택해주세요','err'); return; }
+  if(!content){ toast('상담내용을 입력해주세요','err'); return; }
+
+  const btn = document.getElementById('save-btn');
+  btn.innerHTML = '<span class="spinner"></span>저장 중...';
+  btn.disabled = true;
+
+  const newId = Date.now().toString();
+  try {
+    const res = await fetch(`${BASE}/values/${encodeURIComponent(SHEET_NAME)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS&key=${API_KEY}`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ values: [[newId, fmtPhone(phone), date, time, type, content]] })
+    });
+    const json = await res.json();
+    if(json.error){ toast('저장 실패: ' + json.error.message, 'err'); }
+    else { toast('저장되었습니다 ✓'); clearForm(); await loadRecords(); }
+  } catch(e){ toast('저장 중 오류가 발생했습니다','err'); }
+
+  btn.innerHTML = '저장';
+  btn.disabled = false;
+}
+
+function openDeleteModal(id){ deleteTarget = id; document.getElementById('del-modal').classList.add('open'); }
+function closeModal(){ document.getElementById('del-modal').classList.remove('open'); deleteTarget = null; }
+
+async function confirmDelete(){
+  if(!deleteTarget) return;
+  closeModal();
+  try {
+    // 행 번호 찾기
+    const res = await fetch(`${BASE}/values/${encodeURIComponent(SHEET_NAME)}?key=${API_KEY}`);
+    const json = await res.json();
+    const rows = json.values || [];
+    let rowIndex = -1;
+    for(let i = 1; i < rows.length; i++){
+      if(String(rows[i][0]) === String(deleteTarget)){ rowIndex = i + 1; break; }
+    }
+    if(rowIndex === -1){ toast('행을 찾을 수 없습니다','err'); return; }
+
+    const delRes = await fetch(`${BASE}:batchUpdate?key=${API_KEY}`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        requests: [{
+          deleteDimension: {
+            range: { sheetId: 0, dimension: 'ROWS', startIndex: rowIndex-1, endIndex: rowIndex }
+          }
+        }]
+      })
+    });
+    const delJson = await delRes.json();
+    if(delJson.error){ toast('삭제 실패: ' + delJson.error.message,'err'); }
+    else { toast('삭제되었습니다'); await loadRecords(); }
+  } catch(e){ toast('삭제 중 오류가 발생했습니다','err'); }
+}
+
+function resetFilter(){
+  ['q-search','q-from','q-to'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('q-type').value = '';
+  renderTable();
+}
+
+function getFiltered(){
+  const q = document.getElementById('q-search').value.trim().toLowerCase();
+  const qt = document.getElementById('q-type').value;
+  const qf = document.getElementById('q-from').value;
+  const qto = document.getElementById('q-to').value;
+  return allRecords.filter(r => {
+    if(q && !String(r.phone).toLowerCase().includes(q) && !String(r.content).toLowerCase().includes(q)) return false;
+    if(qt && r.type !== qt) return false;
+    if(qf && r.date < qf) return false;
+    if(qto && r.date > qto) return false;
+    return true;
+  });
+}
+
+function renderTable(){
+  const filtered = getFiltered();
+  const tbody = document.getElementById('table-body');
+  const empty = document.getElementById('empty-msg');
+  const cnt = document.getElementById('result-count');
+  if(filtered.length === 0){ tbody.innerHTML=''; empty.style.display='block'; cnt.textContent=''; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = filtered.map(r => `
+    <tr>
+      <td>${esc(r.phone)}</td>
+      <td>${esc(r.date)}</td>
+      <td>${esc(r.time)}</td>
+      <td><span class="badge b-${r.type||'기타'}">${esc(r.type)}</span></td>
+      <td style="line-height:1.6">${esc(r.content)}</td>
+      <td><button class="btn-sm btn-del" onclick="openDeleteModal('${esc(r.id)}')">삭제</button></td>
+    </tr>
+  `).join('');
+  cnt.textContent = `총 ${filtered.length}건`;
+}
+
+function updateStats(){
+  const t = today(); const ym = t.slice(0,7);
+  document.getElementById('s-total').textContent = allRecords.length;
+  document.getElementById('s-today').textContent = allRecords.filter(r=>r.date===t).length;
+  document.getElementById('s-month').textContent = allRecords.filter(r=>String(r.date).startsWith(ym)).length;
+  document.getElementById('s-breakdown').textContent = allRecords.filter(r=>r.type==='고장').length;
+}
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+document.getElementById('f-phone').addEventListener('input', function(){ this.value = this.value.replace(/[^\d-]/g,''); });
+
+setDefaults();
+loadRecords();
+</script>
+</body>
+</html>
