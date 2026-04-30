@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>고객 상담 관리</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%234a8ab5%22/><text y=%2255%22 x=%2250%22 text-anchor=%22middle%22 font-size=%2255%22 font-family=%22sans-serif%22 fill=%22white%22>📋</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Noto Sans KR',sans-serif;background:#f0f4fa;color:#1a1a2e;font-size:14px;display:flex;flex-direction:column}
+.header{background:linear-gradient(135deg,#4a8ab5,#6aaad0);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:50;box-shadow:0 2px 8px rgba(80,140,190,0.35)}
+.logo{font-size:16px;font-weight:700;color:#fff}
+.logo span{color:#d0eeff}
+.today-badge{background:rgba(255,255,255,0.9);color:#2c5f8a;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+.wrap{max-width:1100px;width:100%;margin:0 auto;padding:10px 14px 0;display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+.section-label{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.section-label .icon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.section-label .title{font-size:13px;font-weight:700}
+
+/* 써머리 섹션 - 2단 분할 */
+.section-summary{background:linear-gradient(135deg,#cde0f5,#ddeeff);border-radius:12px;padding:10px 14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(120,170,210,0.2);flex-shrink:0}
+.section-summary .section-label .icon{background:rgba(255,255,255,0.6)}
+.section-summary .section-label .title{color:#2c5f8a}
+.summary-grid{display:grid;grid-template-columns:1.2fr 3.8fr;gap:10px}
+@media(max-width:640px){.summary-grid{grid-template-columns:1fr}}
+
+/* 오늘 현황 */
+.today-panel{background:rgba(255,255,255,0.7);border-radius:10px;padding:10px}
+.today-panel .panel-title{font-size:11px;font-weight:700;color:#5a87aa;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em}
+.stats-row{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.stat-card{background:#fff;border-radius:8px;padding:7px 10px;border:1px solid rgba(200,220,240,0.6)}
+.stat-label{font-size:10px;color:#5a87aa;margin-bottom:2px}
+.stat-val{font-size:18px;font-weight:700;color:#2c5f8a}
+
+/* 월별 현황 */
+.monthly-panel{background:rgba(255,255,255,0.7);border-radius:10px;padding:10px;height:200px;display:flex;flex-direction:column}
+.monthly-panel .panel-title{font-size:11px;font-weight:700;color:#5a87aa;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;flex-shrink:0}
+.month-select-row{display:flex;gap:6px;margin-bottom:8px;align-items:center;flex-shrink:0}
+.month-select-row select{border:1.5px solid #b8d4ed;border-radius:6px;padding:4px 8px;font-size:12px;background:#fff;color:#2c5f8a;font-family:inherit;font-weight:600}
+.month-select-row button{border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:#7bafd4;color:#fff;border:none}
+.month-select-row button:hover{background:#5a9bc4}
+.monthly-stats{display:flex;flex-direction:column;gap:4px;flex:1;min-height:0;overflow-y:auto}
+.monthly-empty{font-size:12px;color:#aaa;padding:6px 0;text-align:center}
+.mstat-row{display:flex;align-items:center;gap:6px;padding:4px 8px;background:#fff;border-radius:6px;border:1px solid #e8f0f8}
+.mstat-type{font-size:11px;font-weight:700;min-width:100px;white-space:nowrap}
+.mstat-bar-wrap{flex:1;background:#e8f0f8;border-radius:4px;height:8px;overflow:hidden}
+.mstat-bar{height:8px;border-radius:4px;background:#7bafd4;transition:width 0.4s}
+.mstat-count{font-size:12px;font-weight:700;color:#2c5f8a;min-width:28px;text-align:right}
+.mstat-total{font-size:11px;color:#5a87aa;padding:4px 8px 2px;font-weight:600}
+
+/* 등록 섹션 */
+.section-register{background:#f0faf4;border-radius:12px;padding:10px 14px;margin-bottom:8px;border-left:4px solid #7ec8a0;box-shadow:0 2px 8px rgba(0,0,0,0.05);flex-shrink:0}
+.section-register .section-label .icon{background:#c8ecd8;color:#2d7a52}
+.section-register .section-label .title{color:#2d6648}
+
+/* 조회 섹션 */
+.section-search{background:#fffaf0;border-radius:12px;padding:12px 14px;border-left:4px solid #f0b97a;box-shadow:0 2px 8px rgba(0,0,0,0.05);flex:1;min-height:0;overflow-y:auto;margin-bottom:10px;display:flex;flex-direction:column}
+.section-search .section-label .icon{background:#fde8c0;color:#c47c1a}
+.section-search .section-label .title{color:#8a5010}
+
+/* 페이지네이션 */
+.pagination{display:flex;align-items:center;gap:4px;margin-top:12px;justify-content:center;flex-wrap:wrap}
+.pg-btn{min-width:34px;height:34px;padding:0 10px;font-size:13px;border-radius:8px;border:1.5px solid #dde1ea;background:#fff;color:#1a1a2e;cursor:pointer;font-weight:600;font-family:inherit}
+.pg-btn:hover:not(:disabled){background:#fff3e0}
+.pg-btn.active{background:#f0b97a;color:#7a4a10;border-color:#f0b97a}
+.pg-btn:disabled{opacity:0.35;cursor:default}
+
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
+.fg{display:flex;flex-direction:column;gap:3px}
+.fg label{font-size:11px;color:#555;font-weight:600}
+.fg input,.fg select,.fg textarea{border:1.5px solid #dde1ea;border-radius:7px;padding:6px 10px;font-size:13px;background:#fff;color:#1a1a2e;font-family:inherit;width:100%;transition:border-color 0.2s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:#7ec8a0;background:#fff;box-shadow:0 0 0 2px rgba(126,200,160,0.15)}
+.fg textarea{resize:vertical;min-height:52px}
+.wide{grid-column:1/-1}
+.btn-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+button{border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s;border:1.5px solid #dde1ea;background:#fff;color:#1a1a2e}
+button:hover{background:#f5f8ff}
+button:active{transform:scale(0.98)}
+.btn-save{background:#a8d8bc;color:#1a4a2e;border-color:#7ec8a0}
+.btn-save:hover{background:#8fcbab}
+.btn-search{background:#fad4a0;color:#7a4a10;border-color:#f0b97a}
+.btn-search:hover{background:#f5c488}
+.btn-excel{background:#b8d8c0;color:#1a4428;border-color:#8ec8a4}
+.btn-excel:hover{background:#9ecbac}
+.btn-json-export{background:#c7d2fe;color:#312e81;border-color:#a5b4fc}
+.btn-json-export:hover{background:#a5b4fc}
+.btn-json-import{background:#fde68a;color:#78350f;border-color:#fbbf24;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;font-family:inherit;border-width:1.5px;border-style:solid;display:inline-block}
+.btn-json-import:hover{background:#fcd34d}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-del{color:#c04040;border-color:#f0c8c8;background:#fff}
+.btn-del:hover{background:#fff0f0}
+.btn-edit{color:#2c5f8a;border-color:#b8d4ed;background:#fff}
+.btn-edit:hover{background:#eef4fb}
+.btn-branch{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
+.btn-branch:hover{background:#ddd6fe}
+.branch-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;background:#f3e8ff;color:#6b21a8;white-space:nowrap}
+.branch-list{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;margin-bottom:12px}
+.branch-item{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:#f8f5ff;border-radius:8px;border:1px solid #e9d5ff;font-size:13px}
+.branch-item .btn-del{padding:3px 10px;font-size:11px}
+.edit-field{border:1.5px solid #b8d4ed;border-radius:8px;padding:8px 10px;font-size:14px;background:#f0f7ff;color:#1a1a2e;font-family:inherit;width:100%;transition:border-color 0.2s}
+.edit-field:focus{outline:none;border-color:#7bafd4;box-shadow:0 0 0 3px rgba(123,175,212,0.2)}
+.edit-textarea{resize:vertical;min-height:100px}
+.edit-label{font-size:12px;font-weight:700;color:#888;margin-bottom:4px;display:block}
+
+.search-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.search-row input,.search-row select{border:1.5px solid #dde1ea;border-radius:8px;padding:8px 12px;font-size:13px;background:#fff;color:#1a1a2e;font-family:inherit}
+.search-row input:focus,.search-row select:focus{outline:none;border-color:#f0b97a}
+.search-row input{flex:1;min-width:150px}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead{background:#f8f9fc}
+th{padding:11px 12px;text-align:left;border-bottom:2px solid #e2e6f0;font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid #f0f2f7;color:#1a1a2e;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr.clickable:hover td{background:#fff3e0;cursor:pointer}
+
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.b-사용방법{background:#dbeafe;color:#2c5282}
+.b-고장{background:#fde8e8;color:#9b2c2c}
+.b-분실{background:#fef3c7;color:#7c5a0a}
+.b-영수증신청{background:#dcfce7;color:#1a5c34}
+.b-주차등록{background:#d1fae5;color:#065f46}
+.b-운영관리{background:#fce7f3;color:#8c3068}
+.b-환불{background:#ede9fe;color:#5b21b6}
+.b-기타{background:#f3f4f6;color:#4a5568}
+.b-인쇄{background:#dbeafe;color:#1d4ed8}
+.b-복사{background:#d1fae5;color:#065f46}
+.b-스캔{background:#ede9fe;color:#5b21b6}
+.b-팩스{background:#fef3c7;color:#92400e}
+.b-코팅{background:#ccfbf1;color:#0f766e}
+.b-제본{background:#fce7f3;color:#9d174d}
+
+.empty{text-align:center;padding:3rem;color:#aaa;font-size:14px}
+.result-info{font-size:12px;color:#888;margin-top:10px;font-weight:500}
+.hint{font-size:11px;color:#bbb;margin-top:6px}
+
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:opacity 0.3s,transform 0.3s;pointer-events:none;z-index:999;transform:translateY(8px)}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{background:#7ec8a0;color:#1a4a2e;box-shadow:0 4px 12px rgba(126,200,160,0.4)}
+.toast.err{background:#f09090;color:#5a1a1a}
+
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:16px;padding:28px;width:90%;max-width:480px;box-shadow:0 8px 32px rgba(0,0,0,0.15);max-height:85vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:16px}
+.modal p{font-size:14px;color:#666;margin-bottom:20px;line-height:1.7}
+.detail-row{display:flex;padding:10px 0;border-bottom:1px solid #f0f2f7}
+.detail-row:last-child{border-bottom:none}
+.detail-key{font-size:12px;font-weight:700;color:#888;width:90px;flex-shrink:0;padding-top:1px}
+.detail-val{font-size:14px;color:#1a1a2e;flex:1;line-height:1.7}
+.detail-badge-row{padding:12px 0 4px}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">고객<span>상담</span>관리</div>
+  <div class="today-badge" id="today-label"></div>
+</div>
+<div class="wrap">
+
+  <!-- 상담 현황 섹션 -->
+  <div class="section-summary">
+    <div class="section-label">
+      <div class="icon">📊</div>
+      <div class="title">상담 현황</div>
+    </div>
+    <div class="summary-grid">
+
+      <!-- 오늘 현황 -->
+      <div class="today-panel">
+        <div class="panel-title">오늘 현황</div>
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-label">전체 상담</div><div class="stat-val" id="s-total">0</div></div>
+          <div class="stat-card"><div class="stat-label">오늘 상담</div><div class="stat-val" id="s-today">0</div></div>
+          <div class="stat-card"><div class="stat-label">이번달</div><div class="stat-val" id="s-month">0</div></div>
+          <div class="stat-card"><div class="stat-label">고장 접수</div><div class="stat-val" id="s-breakdown">0</div></div>
+        </div>
+      </div>
+
+      <!-- 월별 상담 현황 -->
+      <div class="monthly-panel">
+        <div class="panel-title">월별 상담현황</div>
+        <div class="month-select-row">
+          <select id="m-year"></select>
+          <select id="m-month">
+            <option value="01">1월</option><option value="02">2월</option><option value="03">3월</option>
+            <option value="04">4월</option><option value="05">5월</option><option value="06">6월</option>
+            <option value="07">7월</option><option value="08">8월</option><option value="09">9월</option>
+            <option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
+          </select>
+          <select id="m-branch"><option value="">전체 지점</option></select>
+          <button onclick="renderMonthly()">조회</button>
+        </div>
+        <div id="monthly-stats" class="monthly-stats"><div class="monthly-empty">조회 버튼을 눌러주세요</div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 신규 상담 등록 -->
+  <div class="section-register">
+    <div class="section-label">
+      <div class="icon">✏️</div>
+      <div class="title">신규 상담 등록</div>
+    </div>
+    <div class="form-grid">
+      <div class="fg"><label>고객번호 (전화번호)</label><input type="tel" id="f-phone" placeholder="010-0000-0000" maxlength="13"></div>
+      <div class="fg"><label>상담일자</label><input type="date" id="f-date"></div>
+      <div class="fg"><label>상담시간</label><input type="time" id="f-time"></div>
+      <div class="fg"><label>상담구분1</label>
+        <select id="f-type">
+          <option value="">선택</option>
+          <option value="사용방법">💡 사용방법</option><option value="고장">🔧 고장</option><option value="분실">🔍 분실</option>
+          <option value="영수증신청">🧾 영수증신청</option><option value="주차등록">🚗 주차등록</option><option value="운영관리">⚙️ 운영관리</option><option value="환불">💰 환불</option><option value="기타">📌 기타</option>
+        </select>
+      </div>
+      <div class="fg"><label>상담구분2</label>
+        <select id="f-type2">
+          <option value="">선택</option>
+          <option value="인쇄">🖨️ 인쇄</option><option value="복사">📋 복사</option><option value="스캔">📄 스캔</option>
+          <option value="팩스">📠 팩스</option><option value="코팅">✨ 코팅</option><option value="제본">📚 제본</option>
+        </select>
+      </div>
+      <div class="fg"><label>지점명</label><select id="f-branch"><option value="">선택</option></select></div>
+      <div class="fg wide"><label>상담내용</label><textarea id="f-content" placeholder="상담 내용을 입력하세요"></textarea></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-save" onclick="saveRecord()">💾 저장</button>
+      <button onclick="clearForm()">초기화</button>
+      <button class="btn-branch" onclick="openBranchModal()" style="margin-left:auto">🏪 지점 관리</button>
+    </div>
+  </div>
+
+  <!-- 상담 기록 조회 -->
+  <div class="section-search">
+    <div class="section-label">
+      <div class="icon">🔍</div>
+      <div class="title">상담 기록 조회</div>
+    </div>
+    <div class="search-row">
+      <input type="text" id="q-search" placeholder="전화번호 또는 내용 검색..." onkeydown="if(event.key==='Enter')renderTable()">
+      <select id="q-type">
+        <option value="">전체 구분</option>
+        <option value="사용방법">💡 사용방법</option><option value="고장">🔧 고장</option><option value="분실">🔍 분실</option>
+        <option value="영수증신청">🧾 영수증신청</option><option value="주차등록">🚗 주차등록</option><option value="운영관리">⚙️ 운영관리</option><option value="환불">💰 환불</option><option value="기타">📌 기타</option>
+      </select>
+      <select id="q-branch"><option value="">전체 지점</option></select>
+      <input type="date" id="q-from">
+      <span style="font-size:12px;color:#aaa">~</span>
+      <input type="date" id="q-to">
+      <button class="btn-search" onclick="renderTable()">🔍 조회</button>
+      <button onclick="resetFilter()">초기화</button>
+      <button class="btn-excel" onclick="exportExcel()" style="margin-left:auto">📥 엑셀 내보내기</button>
+      <button class="btn-json-export" onclick="exportJSON()">💾 JSON 내보내기</button>
+      <label class="btn btn-json-import" style="cursor:pointer">📂 JSON 가져오기<input type="file" accept=".json" style="display:none" onchange="importJSON(this)"></label>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th style="width:13%">전화번호</th>
+          <th style="width:10%">날짜</th>
+          <th style="width:7%">시간</th>
+          <th style="width:11%">구분</th>
+          <th style="width:11%">지점명</th>
+          <th>상담내용</th>
+          <th style="width:7%">삭제</th>
+        </tr></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+      <div id="empty-msg" class="empty" style="display:none">등록된 상담 기록이 없습니다.</div>
+    </div>
+    <div class="result-info" id="result-count"></div>
+    <div class="pagination" id="pagination"></div>
+    <div class="hint">※ 행을 클릭하면 상세 내용을 볼 수 있습니다</div>
+  </div>
+</div>
+
+<!-- 상세 팝업 -->
+<div class="modal-bg" id="detail-modal">
+  <div class="modal">
+    <h3 id="detail-modal-title">📋 상담 상세 내용</h3>
+    <div id="detail-content"></div>
+    <div class="btn-row" id="detail-btn-row-view">
+      <button class="btn-del btn-sm" id="detail-del-btn">🗑 삭제</button>
+      <button class="btn-edit btn-sm" id="detail-edit-btn">✏️ 수정</button>
+      <button onclick="closeDetailModal()" style="margin-left:auto">닫기</button>
+    </div>
+    <div class="btn-row" id="detail-btn-row-edit" style="display:none">
+      <button class="btn-save" onclick="saveEdit()">💾 저장</button>
+      <button onclick="cancelEdit()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 지점 관리 팝업 -->
+<div class="modal-bg" id="branch-modal">
+  <div class="modal">
+    <h3>🏪 지점 관리</h3>
+    <div class="branch-list" id="branch-list"></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <input id="branch-input" class="edit-field" style="flex:1" placeholder="새 지점명 입력" maxlength="20" onkeydown="if(event.key==='Enter')addBranch()">
+      <button class="btn-branch" onclick="addBranch()">추가</button>
+    </div>
+    <div class="btn-row" style="margin-top:16px">
+      <button onclick="closeBranchModal()" style="margin-left:auto">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 삭제 확인 팝업 -->
+<div class="modal-bg" id="del-modal">
+  <div class="modal">
+    <h3>상담 기록 삭제</h3>
+    <p>이 상담 기록을 삭제하시겠습니까?<br>삭제 후 복구할 수 없습니다.</p>
+    <div class="btn-row">
+      <button class="btn-del" onclick="confirmDelete()">삭제</button>
+      <button onclick="closeModal()">취소</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY='crm_records_v1';
+const BRANCH_KEY='crm_branches_v1';
+const TYPES=['사용방법','고장','분실','영수증신청','주차등록','운영관리','환불','기타'];
+const TYPES2=['인쇄','복사','스캔','팩스','코팅','제본'];
+const TYPE_ICONS={'사용방법':'💡','고장':'🔧','분실':'🔍','영수증신청':'🧾','주차등록':'🚗','운영관리':'⚙️','환불':'💰','기타':'📌'};
+const TYPE2_ICONS={'인쇄':'🖨️','복사':'📋','스캔':'📄','팩스':'📠','코팅':'✨','제본':'📚'};
+const BAR_COLORS={'사용방법':'#93c5fd','고장':'#fca5a5','분실':'#fde68a','영수증신청':'#86efac','주차등록':'#6ee7b7','운영관리':'#f9a8d4','환불':'#c4b5fd','기타':'#d1d5db'};
+const DEFAULT_BRANCHES=['광교점','권선점','기흥구청점','동백역점','동탄남광장점','동탄역점','망포역점','병점역점','서정리역점','수원시청역점','수원정자점','신영통점','영통역점','호매실점'];
+let records=[];
+let branches=[];
+let deleteTarget=null;
+let currentPage=1;
+const PAGE_SIZE=10;
+
+function loadBranches(){
+  try{ const b=localStorage.getItem(BRANCH_KEY); branches=b?JSON.parse(b):[...DEFAULT_BRANCHES]; }
+  catch(e){ branches=[...DEFAULT_BRANCHES]; }
+}
+function saveBranches(){ try{ localStorage.setItem(BRANCH_KEY,JSON.stringify(branches)); }catch(e){} }
+function refreshBranchSelects(){
+  ['f-branch','q-branch','m-branch'].forEach(id=>{
+    const sel=document.getElementById(id);
+    const cur=sel.value;
+    const isRegister=(id==='f-branch');
+    sel.innerHTML=(isRegister?'<option value="">선택</option>':'<option value="">전체 지점</option>')+
+      branches.map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join('');
+    if(branches.includes(cur)) sel.value=cur;
+  });
+}
+function openBranchModal(){
+  renderBranchList();
+  document.getElementById('branch-modal').classList.add('open');
+}
+function closeBranchModal(){ document.getElementById('branch-modal').classList.remove('open'); }
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('branch-modal').addEventListener('click',function(e){ if(e.target===this) closeBranchModal(); });
+});
+function renderBranchList(){
+  const box=document.getElementById('branch-list');
+  box.innerHTML=branches.map((b,i)=>`
+    <div class="branch-item">
+      <span>${esc(b)}</span>
+      <button class="btn-sm btn-del" onclick="deleteBranch(${i})">삭제</button>
+    </div>`).join('');
+}
+function addBranch(){
+  const inp=document.getElementById('branch-input');
+  const name=inp.value.trim();
+  if(!name){ toast('지점명을 입력해주세요','err'); return; }
+  if(branches.includes(name)){ toast('이미 존재하는 지점입니다','err'); return; }
+  branches.push(name);
+  branches.sort((a,b)=>a.localeCompare(b,'ko'));
+  saveBranches(); refreshBranchSelects(); renderBranchList();
+  inp.value=''; toast('지점이 추가되었습니다 ✓');
+}
+function deleteBranch(idx){
+  branches.splice(idx,1);
+  saveBranches(); refreshBranchSelects(); renderBranchList();
+  toast('지점이 삭제되었습니다');
+}
+
+function load(){ try{ const r=localStorage.getItem(KEY); records=r?JSON.parse(r):[]; }catch(e){ records=[]; } }
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(records)); }catch(e){} }
+function genId(){ return Date.now()+Math.random().toString(36).slice(2,6); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function nowTime(){ return new Date().toTimeString().slice(0,5); }
+function fmtPhone(v){
+  const d=v.replace(/\D/g,'');
+  if(d.length===11) return d.replace(/(\d{3})(\d{4})(\d{4})/,'$1-$2-$3');
+  if(d.length===10) return d.replace(/(\d{3})(\d{3})(\d{4})/,'$1-$2-$3');
+  return v;
+}
+function toast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+type+' show';
+  setTimeout(()=>t.className='toast',2500);
+}
+function initYearSelect(){
+  const now=new Date();
+  const sel=document.getElementById('m-year');
+  for(let y=now.getFullYear();y>=2023;y--){
+    const o=document.createElement('option');
+    o.value=y; o.textContent=y+'년';
+    sel.appendChild(o);
+  }
+  document.getElementById('m-month').value=String(now.getMonth()+1).padStart(2,'0');
+}
+function setDefaults(){
+  document.getElementById('f-date').value=today();
+  document.getElementById('f-time').value=nowTime();
+  const d=new Date();
+  document.getElementById('today-label').textContent=d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';
+}
+function clearForm(){
+  ['f-phone','f-content'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-type').value='';
+  document.getElementById('f-type2').value='';
+  document.getElementById('f-branch').value='';
+  setDefaults();
+}
+function saveRecord(){
+  const phone=document.getElementById('f-phone').value.trim();
+  const date=document.getElementById('f-date').value;
+  const time=document.getElementById('f-time').value;
+  const type=document.getElementById('f-type').value;
+  const type2=document.getElementById('f-type2').value;
+  const branch=document.getElementById('f-branch').value;
+  const content=document.getElementById('f-content').value.trim();
+  if(!phone){ toast('전화번호를 입력해주세요','err'); return; }
+  if(!date){ toast('상담일자를 선택해주세요','err'); return; }
+  if(!type){ toast('상담구분1을 선택해주세요','err'); return; }
+  if(!branch){ toast('지점명을 선택해주세요','err'); return; }
+  if(!content){ toast('상담내용을 입력해주세요','err'); return; }
+  records.unshift({id:genId(),phone:fmtPhone(phone),date,time,type,type2,branch,content});
+  save(); renderTable(); updateStats();
+  clearForm(); toast('저장되었습니다 ✓');
+}
+
+function renderMonthly(){
+  const year=document.getElementById('m-year').value;
+  const month=document.getElementById('m-month').value;
+  const mb=document.getElementById('m-branch').value;
+  const ym=year+'-'+month;
+  const filtered=records.filter(r=>String(r.date).startsWith(ym)&&(!mb||r.branch===mb));
+  const box=document.getElementById('monthly-stats');
+  const branchLabel=mb?' · '+mb:'';
+  if(filtered.length===0){
+    box.innerHTML='<div class="monthly-empty">'+year+'년 '+parseInt(month)+'월'+branchLabel+' 상담 기록이 없습니다</div>';
+    return;
+  }
+  const counts={};
+  const colorMap={};
+  filtered.forEach(r=>{
+    const key=r.type2?(r.type2+' '+r.type):(r.type||'기타');
+    counts[key]=(counts[key]||0)+1;
+    if(!colorMap[key]) colorMap[key]=BAR_COLORS[r.type]||'#7bafd4';
+  });
+  const entries=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const max=Math.max(...entries.map(e=>e[1]),1);
+  const total=filtered.length;
+  let html='<div class="mstat-total">'+year+'년 '+parseInt(month)+'월'+branchLabel+' 총 '+total+'건</div>';
+  entries.forEach(([key,cnt])=>{
+    const pct=Math.round(cnt/max*100);
+    const parts=key.split(' ');
+    let label='';
+    if(parts.length===2){
+      const [t2,t1]=parts;
+      label=`${TYPE2_ICONS[t2]||''} ${t2} ${TYPE_ICONS[t1]||''} ${t1}`;
+    } else {
+      label=`${TYPE_ICONS[key]||''} ${key}`;
+    }
+    html+=`<div class="mstat-row">
+      <span class="mstat-type">${label}</span>
+      <div class="mstat-bar-wrap"><div class="mstat-bar" style="width:${pct}%;background:${colorMap[key]}"></div></div>
+      <span class="mstat-count">${cnt}건</span>
+    </div>`;
+  });
+  box.innerHTML=html;
+}
+
+let currentDetailId=null;
+
+function openDetail(id){
+  currentDetailId=id;
+  const r=records.find(r=>r.id===id);
+  if(!r) return;
+  renderDetailView(r);
+  document.getElementById('detail-del-btn').onclick=()=>{ closeDetailModal(); openDeleteModal(id); };
+  document.getElementById('detail-edit-btn').onclick=()=>openEditMode(id);
+  document.getElementById('detail-btn-row-view').style.display='flex';
+  document.getElementById('detail-btn-row-edit').style.display='none';
+  document.getElementById('detail-modal-title').textContent='📋 상담 상세 내용';
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+function renderDetailView(r){
+  document.getElementById('detail-content').innerHTML=`
+    <div class="detail-badge-row">
+      <span class="badge b-${r.type||'기타'}" style="font-size:13px;padding:5px 14px">${esc(r.type)}</span>
+      ${r.type2?`<span class="badge b-${r.type2}" style="font-size:13px;padding:5px 14px;margin-left:6px">${esc(r.type2)}</span>`:''}
+      ${r.branch?`<span class="branch-badge" style="font-size:12px;padding:4px 12px;margin-left:6px">${esc(r.branch)}</span>`:''}
+    </div>
+    <div class="detail-row"><div class="detail-key">전화번호</div><div class="detail-val"><strong>${esc(r.phone)}</strong></div></div>
+    <div class="detail-row"><div class="detail-key">상담일자</div><div class="detail-val">${esc(r.date)}</div></div>
+    <div class="detail-row"><div class="detail-key">상담시간</div><div class="detail-val">${esc(r.time||'-')}</div></div>
+    <div class="detail-row"><div class="detail-key">지점명</div><div class="detail-val">${esc(r.branch||'-')}</div></div>
+    <div class="detail-row"><div class="detail-key">상담내용</div><div class="detail-val">${esc(r.content).replace(/\n/g,'<br>')}</div></div>
+  `;
+}
+
+function openEditMode(id){
+  const r=records.find(r=>r.id===id);
+  if(!r) return;
+  const typeOptions=TYPES.map(t=>`<option value="${t}"${r.type===t?' selected':''}>${TYPE_ICONS[t]||''} ${t}</option>`).join('');
+  const type2Options=TYPES2.map(t=>`<option value="${t}"${r.type2===t?' selected':''}>${TYPE2_ICONS[t]||''} ${t}</option>`).join('');
+  const branchOptions=branches.map(b=>`<option value="${esc(b)}"${r.branch===b?' selected':''}>${esc(b)}</option>`).join('');
+  document.getElementById('detail-content').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:12px;padding:4px 0">
+      <div><label class="edit-label">전화번호</label><input class="edit-field" id="e-phone" type="tel" value="${esc(r.phone)}" maxlength="13"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="edit-label">상담일자</label><input class="edit-field" id="e-date" type="date" value="${esc(r.date)}"></div>
+        <div><label class="edit-label">상담시간</label><input class="edit-field" id="e-time" type="time" value="${esc(r.time||'')}"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="edit-label">상담구분1</label><select class="edit-field" id="e-type">${typeOptions}</select></div>
+        <div><label class="edit-label">상담구분2</label><select class="edit-field" id="e-type2"><option value="">선택</option>${type2Options}</select></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="edit-label">지점명</label><select class="edit-field" id="e-branch"><option value="">선택</option>${branchOptions}</select></div>
+      </div>
+      <div><label class="edit-label">상담내용</label><textarea class="edit-field edit-textarea" id="e-content">${esc(r.content)}</textarea></div>
+    </div>
+  `;
+  document.getElementById('detail-modal-title').textContent='✏️ 상담 내용 수정';
+  document.getElementById('detail-btn-row-view').style.display='none';
+  document.getElementById('detail-btn-row-edit').style.display='flex';
+
+  document.getElementById('e-phone').addEventListener('input',function(){
+    let d=this.value.replace(/\D/g,'');
+    if(d.length>11) d=d.slice(0,11);
+    if(d.length<=3) this.value=d;
+    else if(d.length<=7) this.value=d.slice(0,3)+'-'+d.slice(3);
+    else if(d.length<=10) this.value=d.slice(0,3)+'-'+d.slice(3,6)+'-'+d.slice(6);
+    else this.value=d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);
+  });
+}
+
+function saveEdit(){
+  const id=currentDetailId;
+  const idx=records.findIndex(r=>r.id===id);
+  if(idx===-1) return;
+  const phone=document.getElementById('e-phone').value.trim();
+  const date=document.getElementById('e-date').value;
+  const time=document.getElementById('e-time').value;
+  const type=document.getElementById('e-type').value;
+  const type2=document.getElementById('e-type2').value;
+  const branch=document.getElementById('e-branch').value;
+  const content=document.getElementById('e-content').value.trim();
+  if(!phone){ toast('전화번호를 입력해주세요','err'); return; }
+  if(!date){ toast('상담일자를 선택해주세요','err'); return; }
+  if(!type){ toast('상담구분1을 선택해주세요','err'); return; }
+  if(!branch){ toast('지점명을 선택해주세요','err'); return; }
+  if(!content){ toast('상담내용을 입력해주세요','err'); return; }
+  records[idx]={...records[idx],phone:fmtPhone(phone),date,time,type,type2,branch,content};
+  save(); renderTable(false); updateStats();
+  renderDetailView(records[idx]);
+  document.getElementById('detail-modal-title').textContent='📋 상담 상세 내용';
+  document.getElementById('detail-btn-row-view').style.display='flex';
+  document.getElementById('detail-btn-row-edit').style.display='none';
+  document.getElementById('detail-del-btn').onclick=()=>{ closeDetailModal(); openDeleteModal(id); };
+  document.getElementById('detail-edit-btn').onclick=()=>openEditMode(id);
+  toast('수정되었습니다 ✓');
+}
+
+function cancelEdit(){
+  const r=records.find(r=>r.id===currentDetailId);
+  if(!r) return;
+  renderDetailView(r);
+  document.getElementById('detail-modal-title').textContent='📋 상담 상세 내용';
+  document.getElementById('detail-btn-row-view').style.display='flex';
+  document.getElementById('detail-btn-row-edit').style.display='none';
+}
+
+function closeDetailModal(){
+  document.getElementById('detail-modal').classList.remove('open');
+  currentDetailId=null;
+}
+document.getElementById('detail-modal').addEventListener('click',function(e){ if(e.target===this) closeDetailModal(); });
+
+function openDeleteModal(id){ deleteTarget=id; document.getElementById('del-modal').classList.add('open'); }
+function closeModal(){ document.getElementById('del-modal').classList.remove('open'); deleteTarget=null; }
+function confirmDelete(){
+  if(!deleteTarget) return;
+  records=records.filter(r=>r.id!==deleteTarget);
+  save(); renderTable(false); updateStats();
+  closeModal(); toast('삭제되었습니다');
+}
+function resetFilter(){
+  ['q-search','q-from','q-to'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('q-type').value='';
+  document.getElementById('q-branch').value='';
+  renderTable();
+}
+function getFiltered(){
+  const q=document.getElementById('q-search').value.trim().toLowerCase();
+  const qt=document.getElementById('q-type').value;
+  const qb=document.getElementById('q-branch').value;
+  const qf=document.getElementById('q-from').value;
+  const qto=document.getElementById('q-to').value;
+  return records.filter(r=>{
+    const phoneClean=r.phone.replace(/-/g,'');
+    const qClean=q.replace(/-/g,'');
+    if(q && !phoneClean.includes(qClean) && !r.phone.includes(q) && !r.content.toLowerCase().includes(q)) return false;
+    if(qt && r.type!==qt) return false;
+    if(qb && r.branch!==qb) return false;
+    if(qf && r.date<qf) return false;
+    if(qto && r.date>qto) return false;
+    return true;
+  });
+}
+function renderTable(resetPage=true){
+  if(resetPage) currentPage=1;
+  const filtered=getFiltered();
+  const totalPages=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE));
+  if(currentPage>totalPages) currentPage=totalPages;
+  const tbody=document.getElementById('table-body');
+  const empty=document.getElementById('empty-msg');
+  const cnt=document.getElementById('result-count');
+  if(filtered.length===0){ tbody.innerHTML=''; empty.style.display='block'; cnt.textContent=''; renderPagination(0,1); return; }
+  empty.style.display='none';
+  const pageData=filtered.slice((currentPage-1)*PAGE_SIZE, currentPage*PAGE_SIZE);
+  tbody.innerHTML=pageData.map(r=>`
+    <tr class="clickable" onclick="openDetail('${r.id}')">
+      <td><strong>${esc(r.phone)}</strong></td>
+      <td>${esc(r.date)}</td>
+      <td>${esc(r.time||'-')}</td>
+      <td><span class="badge b-${r.type||'기타'}">${esc(r.type)}</span>${r.type2?`<br><span class="badge b-${r.type2}" style="margin-top:4px">${esc(r.type2)}</span>`:''}</td>
+      <td><span class="branch-badge">${esc(r.branch||'-')}</span></td>
+      <td style="line-height:1.6;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.content)}</td>
+      <td><button class="btn-sm btn-del" onclick="event.stopPropagation();openDeleteModal('${r.id}')">삭제</button></td>
+    </tr>
+  `).join('');
+  cnt.textContent=`총 ${filtered.length}건 (${currentPage}/${totalPages}페이지)`;
+  renderPagination(filtered.length,totalPages);
+}
+function renderPagination(total,totalPages){
+  const box=document.getElementById('pagination');
+  if(totalPages<=1){ box.innerHTML=''; return; }
+  const start=Math.max(1,currentPage-2);
+  const end=Math.min(totalPages,currentPage+2);
+  let html=`<button class="pg-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>◀ 이전</button>`;
+  if(start>1){ html+=`<button class="pg-btn" onclick="goPage(1)">1</button>`; if(start>2) html+=`<span style="padding:0 4px;color:#aaa">…</span>`; }
+  for(let i=start;i<=end;i++) html+=`<button class="pg-btn${i===currentPage?' active':''}" onclick="goPage(${i})">${i}</button>`;
+  if(end<totalPages){ if(end<totalPages-1) html+=`<span style="padding:0 4px;color:#aaa">…</span>`; html+=`<button class="pg-btn" onclick="goPage(${totalPages})">${totalPages}</button>`; }
+  html+=`<button class="pg-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>다음 ▶</button>`;
+  box.innerHTML=html;
+}
+function goPage(p){
+  const filtered=getFiltered();
+  const totalPages=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE));
+  currentPage=Math.max(1,Math.min(p,totalPages));
+  renderTable(false);
+}
+function updateStats(){
+  const t=today(); const ym=t.slice(0,7);
+  document.getElementById('s-total').textContent=records.length;
+  document.getElementById('s-today').textContent=records.filter(r=>r.date===t).length;
+  document.getElementById('s-month').textContent=records.filter(r=>String(r.date).startsWith(ym)).length;
+  document.getElementById('s-breakdown').textContent=records.filter(r=>r.type==='고장').length;
+}
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function exportExcel(){
+  const filtered=getFiltered();
+  if(filtered.length===0){ toast('내보낼 데이터가 없습니다','err'); return; }
+  const BOM='\uFEFF';
+  const header=['전화번호','날짜','시간','상담구분1','상담구분2','지점명','상담내용'];
+  const rows=filtered.map(r=>[r.phone,r.date,r.time,r.type,r.type2||'',r.branch||'','"'+r.content.replace(/"/g,'""')+'"']);
+  const csv=BOM+[header,...rows].map(r=>r.join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='상담기록_'+today()+'.csv'; a.click();
+  URL.revokeObjectURL(url);
+  toast('엑셀 파일로 내보냈습니다 ✓');
+}
+
+function exportJSON(){
+  if(records.length===0){ toast('내보낼 데이터가 없습니다','err'); return; }
+  const blob=new Blob([JSON.stringify(records,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='상담기록_백업_'+today()+'.json'; a.click();
+  URL.revokeObjectURL(url);
+  toast('JSON 파일로 내보냈습니다 ✓');
+}
+function importJSON(input){
+  const file=input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!Array.isArray(data)) throw new Error();
+      if(!confirm(`총 ${data.length}건의 기록을 가져옵니다.\n기존 데이터와 합쳐집니다. 계속하시겠습니까?`)){
+        input.value=''; return;
+      }
+      const existingIds=new Set(records.map(r=>r.id));
+      const newRecords=data.filter(r=>r.id&&!existingIds.has(r.id));
+      records=[...records,...newRecords];
+      records.sort((a,b)=>b.date.localeCompare(a.date)||(b.time||'').localeCompare(a.time||''));
+      save(); renderTable(); updateStats();
+      toast(`${newRecords.length}건 추가되었습니다 ✓`);
+    }catch(err){
+      toast('올바른 JSON 파일이 아닙니다','err');
+    }
+    input.value='';
+  };
+  reader.readAsText(file,'utf-8');
+}
+
+document.getElementById('f-phone').addEventListener('input',function(){
+  let d=this.value.replace(/\D/g,'');
+  if(d.length>11) d=d.slice(0,11);
+  if(d.length<=3) this.value=d;
+  else if(d.length<=7) this.value=d.slice(0,3)+'-'+d.slice(3);
+  else if(d.length<=10) this.value=d.slice(0,3)+'-'+d.slice(3,6)+'-'+d.slice(6);
+  else this.value=d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);
+});
+
+load(); loadBranches(); setDefaults(); initYearSelect(); refreshBranchSelects(); renderTable(); updateStats();
+</script>
+</body>
+</html>
