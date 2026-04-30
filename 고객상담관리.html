@@ -322,7 +322,8 @@ tr.clickable:hover td{background:#fff3e0;cursor:pointer}
 <div class="toast" id="toast"></div>
 
 <script>
-const KEY='crm_records_v1';
+const SUPABASE_URL='https://wbcfciiuiootbdezxfwy.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndiY2ZjaWl1aW9vdGJkZXp4Znd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1MjkyMTQsImV4cCI6MjA5MzEwNTIxNH0.UV4ukUXuAYKAqq85B4FTHO2BtIOqPaBHgAJN5lqyU5s';
 const BRANCH_KEY='crm_branches_v1';
 const TYPES=['사용방법','고장','분실','영수증신청','주차등록','운영관리','환불','기타'];
 const TYPES2=['인쇄','복사','스캔','팩스','코팅','제본'];
@@ -335,6 +336,25 @@ let branches=[];
 let deleteTarget=null;
 let currentPage=1;
 const PAGE_SIZE=10;
+
+async function sbFetch(method,query='',body=null,prefer=''){
+  const headers={'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'};
+  if(prefer) headers['Prefer']=prefer;
+  else if(method==='POST'||method==='PATCH') headers['Prefer']='return=representation';
+  const opts={method,headers};
+  if(body!==null) opts.body=JSON.stringify(body);
+  const res=await fetch(SUPABASE_URL+'/rest/v1/consultations'+query,opts);
+  if(!res.ok){const e=await res.text();throw new Error(e);}
+  if(res.status===204) return null;
+  return res.json();
+}
+async function loadData(){
+  try{
+    const data=await sbFetch('GET','?order=created_at.desc&limit=2000');
+    records=data||[];
+    renderTable(); updateStats();
+  }catch(e){ toast('데이터 로딩 실패: '+e.message,'err'); }
+}
 
 function loadBranches(){
   try{ const b=localStorage.getItem(BRANCH_KEY); branches=b?JSON.parse(b):[...DEFAULT_BRANCHES]; }
@@ -383,8 +403,6 @@ function deleteBranch(idx){
   toast('지점이 삭제되었습니다');
 }
 
-function load(){ try{ const r=localStorage.getItem(KEY); records=r?JSON.parse(r):[]; }catch(e){ records=[]; } }
-function save(){ try{ localStorage.setItem(KEY,JSON.stringify(records)); }catch(e){} }
 function genId(){ return Date.now()+Math.random().toString(36).slice(2,6); }
 function today(){ return new Date().toISOString().slice(0,10); }
 function nowTime(){ return new Date().toTimeString().slice(0,5); }
@@ -422,7 +440,7 @@ function clearForm(){
   document.getElementById('f-branch').value='';
   setDefaults();
 }
-function saveRecord(){
+async function saveRecord(){
   const phone=document.getElementById('f-phone').value.trim();
   const date=document.getElementById('f-date').value;
   const time=document.getElementById('f-time').value;
@@ -435,9 +453,13 @@ function saveRecord(){
   if(!type){ toast('상담구분1을 선택해주세요','err'); return; }
   if(!branch){ toast('지점명을 선택해주세요','err'); return; }
   if(!content){ toast('상담내용을 입력해주세요','err'); return; }
-  records.unshift({id:genId(),phone:fmtPhone(phone),date,time,type,type2,branch,content});
-  save(); renderTable(); updateStats();
-  clearForm(); toast('저장되었습니다 ✓');
+  const record={id:genId(),phone:fmtPhone(phone),date,time,type,type2,branch,content};
+  try{
+    await sbFetch('POST','',record);
+    records.unshift(record);
+    renderTable(); updateStats();
+    clearForm(); toast('저장되었습니다 ✓');
+  }catch(e){ toast('저장 실패: '+e.message,'err'); }
 }
 
 function renderMonthly(){
@@ -549,7 +571,7 @@ function openEditMode(id){
   });
 }
 
-function saveEdit(){
+async function saveEdit(){
   const id=currentDetailId;
   const idx=records.findIndex(r=>r.id===id);
   if(idx===-1) return;
@@ -565,15 +587,18 @@ function saveEdit(){
   if(!type){ toast('상담구분1을 선택해주세요','err'); return; }
   if(!branch){ toast('지점명을 선택해주세요','err'); return; }
   if(!content){ toast('상담내용을 입력해주세요','err'); return; }
-  records[idx]={...records[idx],phone:fmtPhone(phone),date,time,type,type2,branch,content};
-  save(); renderTable(false); updateStats();
-  renderDetailView(records[idx]);
-  document.getElementById('detail-modal-title').textContent='📋 상담 상세 내용';
-  document.getElementById('detail-btn-row-view').style.display='flex';
-  document.getElementById('detail-btn-row-edit').style.display='none';
-  document.getElementById('detail-del-btn').onclick=()=>{ closeDetailModal(); openDeleteModal(id); };
-  document.getElementById('detail-edit-btn').onclick=()=>openEditMode(id);
-  toast('수정되었습니다 ✓');
+  try{
+    await sbFetch('PATCH','?id=eq.'+id,{phone:fmtPhone(phone),date,time,type,type2,branch,content});
+    records[idx]={...records[idx],phone:fmtPhone(phone),date,time,type,type2,branch,content};
+    renderTable(false); updateStats();
+    renderDetailView(records[idx]);
+    document.getElementById('detail-modal-title').textContent='📋 상담 상세 내용';
+    document.getElementById('detail-btn-row-view').style.display='flex';
+    document.getElementById('detail-btn-row-edit').style.display='none';
+    document.getElementById('detail-del-btn').onclick=()=>{ closeDetailModal(); openDeleteModal(id); };
+    document.getElementById('detail-edit-btn').onclick=()=>openEditMode(id);
+    toast('수정되었습니다 ✓');
+  }catch(e){ toast('수정 실패: '+e.message,'err'); }
 }
 
 function cancelEdit(){
@@ -593,11 +618,14 @@ document.getElementById('detail-modal').addEventListener('click',function(e){ if
 
 function openDeleteModal(id){ deleteTarget=id; document.getElementById('del-modal').classList.add('open'); }
 function closeModal(){ document.getElementById('del-modal').classList.remove('open'); deleteTarget=null; }
-function confirmDelete(){
+async function confirmDelete(){
   if(!deleteTarget) return;
-  records=records.filter(r=>r.id!==deleteTarget);
-  save(); renderTable(false); updateStats();
-  closeModal(); toast('삭제되었습니다');
+  try{
+    await sbFetch('DELETE','?id=eq.'+deleteTarget);
+    records=records.filter(r=>r.id!==deleteTarget);
+    renderTable(false); updateStats();
+    closeModal(); toast('삭제되었습니다');
+  }catch(e){ toast('삭제 실패: '+e.message,'err'); }
 }
 function resetFilter(){
   ['q-search','q-from','q-to'].forEach(id=>document.getElementById(id).value='');
@@ -702,7 +730,7 @@ function importJSON(input){
   const file=input.files[0];
   if(!file) return;
   const reader=new FileReader();
-  reader.onload=function(e){
+  reader.onload=async function(e){
     try{
       const data=JSON.parse(e.target.result);
       if(!Array.isArray(data)) throw new Error();
@@ -711,12 +739,13 @@ function importJSON(input){
       }
       const existingIds=new Set(records.map(r=>r.id));
       const newRecords=data.filter(r=>r.id&&!existingIds.has(r.id));
-      records=[...records,...newRecords];
-      records.sort((a,b)=>b.date.localeCompare(a.date)||(b.time||'').localeCompare(a.time||''));
-      save(); renderTable(); updateStats();
+      if(newRecords.length===0){ toast('추가할 새 데이터가 없습니다'); input.value=''; return; }
+      const toInsert=newRecords.map(({id,phone,date,time,type,type2,branch,content})=>({id,phone,date,time,type,type2,branch,content}));
+      await sbFetch('POST','',toInsert,'resolution=ignore-duplicates');
+      await loadData();
       toast(`${newRecords.length}건 추가되었습니다 ✓`);
     }catch(err){
-      toast('올바른 JSON 파일이 아닙니다','err');
+      toast('가져오기 실패: '+err.message,'err');
     }
     input.value='';
   };
@@ -732,7 +761,7 @@ document.getElementById('f-phone').addEventListener('input',function(){
   else this.value=d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);
 });
 
-load(); loadBranches(); setDefaults(); initYearSelect(); refreshBranchSelects(); renderTable(); updateStats();
+loadBranches(); setDefaults(); initYearSelect(); refreshBranchSelects(); loadData();
 </script>
 </body>
 </html>
